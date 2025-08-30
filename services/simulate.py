@@ -84,4 +84,4 @@ def simulate(
         "metrics": metrics,
         "years": list(range(1, years + 1)),
         "cashflow": cf,
-    
+        }
