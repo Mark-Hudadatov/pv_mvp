@@ -1,0 +1,25 @@
+cpi_track:
+  base: 0.025
+  low: 0.02
+  high: 0.03
+retail_growth:
+  base: 0.00
+  low: -0.02
+  high: 0.02
+policy_targets:
+  bau: { rooftops: 54000, capacity_gw: 1.08 }
+  target100k: { rooftops: 100000, capacity_gw: 2.0 }
+  target150k: { rooftops: 150000, capacity_gw: 3.0 }
+loan_scenarios:
+  conservative:
+    interest: high
+    tenor: low
+    downpayment: 0.3
+  base:
+    interest: base
+    tenor: base
+    downpayment: 0.2
+  optimistic:
+    interest: low
+    tenor: high
+    downpayment: 0.1
