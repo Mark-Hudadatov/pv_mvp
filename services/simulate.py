@@ -69,8 +69,18 @@ def simulate(
     elif finance_mode == "loan":
         from .finance_loan import apply_loan_flows
 
+        capex_total = capex_per_kwp * kwp
         cf_before_debt = [-capex_total] + [ci - op for ci, op in zip(cash_in, opex)]
-        cf = apply_loan_flows(cf_before_debt, loan_scenario)  # CF с обслуживанием долга
+
+        # достаём конфиг из defaults.yaml
+        loan_cfg = defaults()["finance_modes"]["loan"]
+        scen_cfg = pick_scenario("loan_scenarios", loan_scenario)
+
+        downpayment = loan_cfg["downpayment"] * capex_total
+        interest = loan_cfg["interest_rate"][scen_cfg["interest"]]
+        tenor = loan_cfg["tenor_years"][scen_cfg["tenor"]]
+
+        cf = apply_loan_flows(cf_before_debt, downpayment, interest, tenor)
         metrics = format_metrics(cf, leasing=False)
 
     else:  # leasing
