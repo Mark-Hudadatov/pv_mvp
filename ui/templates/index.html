@@ -254,36 +254,90 @@
     </div>
   </footer>
 
-  <!-- ===== Minimal hooks (no logic yet) ===== -->
-  <script>
-    // Responsive nav toggle (hook-ready)
-    document.querySelector('[data-nav-toggle]')?.addEventListener('click', (e) => {
-      const btn = e.currentTarget;
-      const menu = document.getElementById('navMenu');
-      const expanded = btn.getAttribute('aria-expanded') === 'true';
-      btn.setAttribute('aria-expanded', String(!expanded));
-      menu.classList.toggle('is-open');
-    });
+  <!-- ===== V1 hooks (minimum logic) ===== -->
+<script>
+  // Responsive nav toggle
+  document.querySelector('[data-nav-toggle]')?.addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    const menu = document.getElementById('navMenu');
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!expanded));
+    menu.classList.toggle('is-open');
+  });
 
-    // Form submit: placeholder — wire later to /api/sim via fetch or htmx
-    document.getElementById('simForm')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      // TODO: fetch('/api/sim?...') -> update #mPayback, #mNPV, #mIRR, and Plotly chart
-      // Placeholder demo reset to indicate responsiveness:
-      document.getElementById('mPayback').textContent = '...';
-      document.getElementById('mNPV').textContent = '...';
-      document.getElementById('mIRR').textContent = '...';
-    });
+  // Helper: serialize form to query string
+  function paramsFromForm(form) {
+    const fd = new FormData(form);
+    return new URLSearchParams([...fd.entries()]).toString();
+  }
 
-    document.getElementById('btnReset')?.addEventListener('click', () => {
-      document.getElementById('simForm').reset();
-      ['mPayback','mNPV','mIRR','statPayback','statNPV','statIRR'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = '—';
-      });
-      const ch = document.getElementById('cashflowChart');
-      if (ch && window.Plotly) Plotly.purge(ch);
+  // Update metric cards + hero stats
+  function updateMetrics(metrics) {
+    const pay = metrics.payback_year ?? '—';
+    const npv = metrics.npv != null ? Math.round(metrics.npv).toLocaleString('he-IL') : '—';
+    const irr = metrics.irr != null ? (metrics.irr * 100).toFixed(1) + '%' : 'n/a';
+
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('mPayback', pay);
+    set('mNPV', '₪ ' + npv);
+    set('mIRR', irr);
+
+    set('statPayback', typeof pay === 'number' ? pay + 'y' : '—');
+    set('statNPV', '₪ ' + npv);
+    set('statIRR', irr);
+  }
+
+  // Draw cashflow bar chart
+  function drawCashflow(years, cashflow) {
+    const el = document.getElementById('cashflowChart');
+    if (!window.Plotly || !el) return;
+    const data = [{ x: years, y: cashflow, type: 'bar', hovertemplate: 'Year %{x}<br>₪%{y:,.0f}<extra></extra>' }];
+    const layout = {
+      margin: { t: 24, r: 16, b: 40, l: 56 },
+      paper_bgcolor: 'transparent',
+      plot_bgcolor: 'transparent',
+      yaxis: { tickprefix: '₪', gridcolor: '#2a2f3b' },
+      xaxis: { gridcolor: '#2a2f3b' }
+    };
+    const config = { displayModeBar: false, responsive: true };
+    Plotly.react(el, data, layout, config);
+  }
+
+  // Submit form -> call API
+  document.getElementById('simForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const btn = document.getElementById('btnRun');
+    btn.disabled = true; btn.textContent = 'Calculating...';
+
+    try {
+      const qs = paramsFromForm(form);
+      const res = await fetch(`/api/sim?${qs}`);
+      if (!res.ok) throw new Error('Request failed: ' + res.status);
+      const data = await res.json();
+
+      updateMetrics(data.metrics || {});
+      drawCashflow(data.years || [], data.cashflow || []);
+    } catch (err) {
+      console.error(err);
+      updateMetrics({ payback_year: '—', npv: null, irr: null });
+      drawCashflow([], []);
+      alert('Calculation failed. Please try again.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Run calculation';
+    }
+  });
+
+  // Reset button
+  document.getElementById('btnReset')?.addEventListener('click', () => {
+    document.getElementById('simForm').reset();
+    ['mPayback','mNPV','mIRR','statPayback','statNPV','statIRR'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.textContent = '—';
     });
-  </script>
+    const ch = document.getElementById('cashflowChart');
+    if (ch && window.Plotly) Plotly.purge(ch);
+  });
+</script>
+
 </body>
 </html>
