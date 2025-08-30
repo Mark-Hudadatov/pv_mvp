@@ -62,7 +62,7 @@ def index(request: Request):
 # Принимаем kWp из query (как в твоём URL) и маппим на kwp
 @app.get("/api/sim")
 def api_sim(
-    kWp: float = Query(20, alias="kWp"),                 # совместимость с kWp
+    kwp: float = Query(20, alias="kwp"),                 # совместимость с kWp
     route: str = "accelerated",
     finance_mode: str = "equity",
     loan_scenario: str = "base",
@@ -73,7 +73,7 @@ def api_sim(
 
     try:
         res = simulate(
-            kwp=kWp,
+            kwp=kwp,
             route=route_norm,
             accounting="net_billing",
             finance_mode=finance_mode,
