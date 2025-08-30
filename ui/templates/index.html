@@ -5,34 +5,80 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Israeli Rooftop PV — Calculator For SMB & Municipalities (≤30 kW)</title>
   <link rel="stylesheet" href="/static/style.css" />
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <!-- HTMX for progressive interactivity (optional, used later) -->
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12" defer></script>
+  <!-- Plotly CDN (charts hooked later via JS) -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js" defer></script>
 </head>
 
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
   <!-- ===== Header / Brand ===== -->
   <header class="site-header">
     <div class="container header__wrap">
       <div class="brand">
         <div class="brand__logo" aria-hidden="true">☀️</div>
         <div>
-          <div class="brand__title">PV Dashboard for SMB in Israel</div>
-          <div class="brand__subtitle">Transparent payback for small rooftops (≤30 kW)</div>
+          <div class="brand__title">PV Dashboard — Israel</div>
+          <div class="brand__subtitle">Simple payback & value for small rooftops (≤30 kW)</div>
         </div>
       </div>
+
+      <nav class="nav" aria-label="Primary">
+        <button class="nav__btn" data-nav-toggle aria-expanded="false" aria-controls="navMenu">Menu</button>
+        <ul id="navMenu" class="nav__menu">
+          <li><a class="nav__link is-active" href="#">Calculator</a></li>
+          <li><a class="nav__link" href="#scenarios">Scenarios</a></li>
+          <li><a class="nav__link" href="#faq">FAQ</a></li>
+          <li><a class="nav__link" href="#about">About</a></li>
+        </ul>
+      </nav>
     </div>
   </header>
 
-  <main id="main" class="main container">
+  <!-- ===== Hero ===== -->
+  <section class="hero">
+    <div class="container hero__wrap">
+      <div class="hero__copy">
+        <h1 class="hero__title">Is PV worth it for your roof?</h1>
+        <p class="hero__text">
+          This calculator gives a transparent, regulation-aligned estimate for small-voltage rooftop PV in Israel.
+          You’ll see <strong>Payback</strong>, <strong>NPV</strong> and optional <strong>IRR</strong> based on the
+          government tariff routes and average technical assumptions. Perfect for SMB rooftops and condo roofs up to 30 kW.
+        </p>
+        <ul class="hero__bullets">
+          <li>Up to 30 kW (low voltage), Net Billing regime</li>
+          <li>Nominal / Accelerated / CPI-linked tariff routes</li>
+          <li>Equity, Loan, or Leasing financing</li>
+        </ul>
+        <a class="btn btn--primary" href="#calculator">Start calculation</a>
+      </div>
 
-    <!-- ===== Calculator FIRST BLOCK ===== -->
+      <div class="hero__panel">
+        <div class="stat">
+          <div class="stat__value" id="statPayback">—</div>
+          <div class="stat__label">Estimated Payback</div>
+        </div>
+        <div class="stat">
+          <div class="stat__value" id="statNPV">—</div>
+          <div class="stat__label">NPV (₪)</div>
+        </div>
+        <div class="stat">
+          <div class="stat__value" id="statIRR">—</div>
+          <div class="stat__label">IRR</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main id="main" class="main container">
+    <!-- ===== Calculator ===== -->
     <section id="calculator" class="card card--grid">
       <header class="card__header">
-        <h2>Calculator — Start Here</h2>
+        <h2>Calculator</h2>
         <p class="muted">
-          ⚖️ Based on <a href="https://www.gov.il/he/departments/pua" target="_blank">PUA</a> & 
-          <a href="https://www.energy.gov.il" target="_blank">משרד האנרגיה</a>.<br>
-          🎯 Focus: SMB & municipalities (typical rooftops 100–300 m²).<br>
-          💡 Presets explain common cases: Conservative, Base, Optimistic.
+          Use national averages for a quick estimate. You can fine-tune later. All values are pre-tax and aligned with current PUA decisions.
         </p>
       </header>
 
@@ -41,7 +87,7 @@
         <div class="form__row">
           <label class="form__col">
             <span class="form__label">System size (kWp)</span>
-            <input class="input" type="number" name="kwp" min="5" max="30" step="1" value="20" />
+            <input class="input" type="number" name="kWp" min="5" max="30" step="1" value="20" inputmode="decimal" />
           </label>
 
           <label class="form__col">
@@ -56,7 +102,7 @@
           <label class="form__col">
             <span class="form__label">Finance mode</span>
             <select class="input" name="finance_mode">
-              <option value="equity" selected>Equity</option>
+              <option value="equity" selected>Equity (own funds)</option>
               <option value="loan">Loan</option>
               <option value="leasing">Leasing</option>
             </select>
@@ -73,7 +119,7 @@
 
           <label class="form__col">
             <span class="form__label">Self-consumption (0–1)</span>
-            <input class="input" type="number" name="self_consumption" min="0" max="1" step="0.1" value="0.5" />
+            <input class="input" type="number" name="self_consumption" min="0" max="1" step="0.1" value="0.5" inputmode="decimal" />
           </label>
         </div>
 
@@ -83,126 +129,215 @@
         </div>
       </form>
 
-      <!-- Preset Scenarios -->
-      <div class="presets">
-        <h3>Preset Scenarios</h3>
-        <div class="preset-grid">
-          <button class="preset" data-scenario="conservative">Conservative<br><small>High CAPEX, low self-consumption</small></button>
-          <button class="preset is-active" data-scenario="base">Base<br><small>Typical SMB rooftop</small></button>
-          <button class="preset" data-scenario="optimistic">Optimistic<br><small>Low CAPEX, high self-consumption</small></button>
-        </div>
-      </div>
-
       <!-- Results -->
       <div class="results">
         <div class="results__metrics">
-          <div class="metric"><div class="metric__label">Payback (yrs)</div><div class="metric__value" id="mPayback">—</div></div>
-          <div class="metric"><div class="metric__label">NPV (₪)</div><div class="metric__value" id="mNPV">—</div></div>
-          <div class="metric"><div class="metric__label">IRR</div><div class="metric__value" id="mIRR">—</div></div>
+          <div class="metric">
+            <div class="metric__label">Payback (years)</div>
+            <div class="metric__value" id="mPayback">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric__label">NPV (₪)</div>
+            <div class="metric__value" id="mNPV">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric__label">IRR</div>
+            <div class="metric__value" id="mIRR">—</div>
+          </div>
         </div>
 
-        <div class="chart-toggle">
-          <button type="button" class="toggle-btn active" data-mode="annual">Annual</button>
-          <button type="button" class="toggle-btn" data-mode="cumulative">Cumulative</button>
+        <div class="results__chart">
+          <div class="card">
+            <header class="card__header">
+              <h3>Annual Cash Flow</h3>
+              <p class="muted">Nominal cash flow over 25 years (incl. OPEX, financing where selected).</p>
+            </header>
+            <div id="cashflowChart" class="chart" role="img" aria-label="Annual cash flow bar chart"></div>
+          </div>
         </div>
-        <div id="cashflowChart" class="chart"></div>
       </div>
+
+      <aside class="card__aside">
+        <h3>Who is this for?</h3>
+        <ul class="list">
+          <li><strong>SMBs & municipalities</strong> — quick payback check for small rooftops</li>
+          <li><strong>Condo roofs (up to 30 kW)</strong> — transparent options incl. leasing</li>
+          <li><strong>Investors</strong> — fast, standardized view of rooftop economics</li>
+        </ul>
+        <p class="muted small">
+          Results are indicative and rely on national averages for area-to-kWp and yield. Local shading or unusual roof geometry may change outcomes.
+        </p>
+      </aside>
     </section>
 
-    <!-- ===== Hero ===== -->
-    <section class="hero">
-      <div class="container hero__wrap">
-        <div class="hero__copy">
-          <h1 class="hero__title">Is PV worth it for your roof?</h1>
-          <p class="hero__text">
-            This calculator gives a transparent estimate for small-voltage rooftop PV in Israel. 
-            Perfect for SMB rooftops and condo roofs up to 30 kW.
-          </p>
+    <!-- ===== Scenarios ===== -->
+    <section id="scenarios" class="card">
+      <header class="card__header">
+        <h2>Preset Scenarios</h2>
+        <p class="muted">One-click presets adjust financing and retail growth for a quick sensitivity view.</p>
+      </header>
+
+      <div class="presets">
+        <button class="preset" data-preset="conservative">Conservative</button>
+        <button class="preset is-active" data-preset="base">Base</button>
+        <button class="preset" data-preset="optimistic">Optimistic</button>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <header class="card__header"><h3>Assumptions</h3></header>
+          <ul class="list small">
+            <li>CAPEX & OPEX per current market ranges</li>
+            <li>Retail tariff growth per scenario track</li>
+            <li>Tariff route rules per PUA decisions (2021–2025)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <header class="card__header"><h3>Impact</h3></header>
+          <ul class="list small">
+            <li>Payback and NPV respond most to self-consumption and CAPEX</li>
+            <li>Accelerated route improves early-year cash flow</li>
+          </ul>
+        </div>
+        <div class="card">
+          <header class="card__header"><h3>Next steps</h3></header>
+          <ul class="list small">
+            <li>Add loan details (rate, tenor, downpayment)</li>
+            <li>Export PDF with assumptions</li>
+          </ul>
         </div>
       </div>
     </section>
 
     <!-- ===== FAQ ===== -->
     <section id="faq" class="card">
-      <header class="card__header"><h2>FAQ</h2></header>
+      <header class="card__header">
+        <h2>FAQ</h2>
+      </header>
       <div class="faq">
-        <details><summary>What roof size do I need for 30 kW?</summary>
-          <p>Rule of thumb: ~0.14 kW/m². A 30 kW system needs ~210–230 m² usable area.</p>
+        <details class="faq__item">
+          <summary>What roof size do I need for 30 kW?</summary>
+          <p>As a rule of thumb ~0.14 kW per m². A 30 kW system needs ~210–230 m² of usable area.</p>
         </details>
-        <details><summary>Does self-consumption matter?</summary>
-          <p>Yes, each kWh offsets retail tariff and improves payback.</p>
+        <details class="faq__item">
+          <summary>Does self-consumption matter?</summary>
+          <p>Yes. Every kWh you consume on-site offsets the retail tariff, usually improving payback.</p>
         </details>
-        <details><summary>Can I switch tariff routes after installation?</summary>
-          <p>No. Route chosen at application is binding.</p>
+        <details class="faq__item">
+          <summary>Can I switch tariff routes after installation?</summary>
+          <p>No. PUA decisions indicate routes are chosen at application; changing later is restricted.</p>
         </details>
       </div>
     </section>
 
     <!-- ===== About ===== -->
     <section id="about" class="card">
-      <header class="card__header"><h2>About this MVP</h2></header>
-      <p>This MVP was built by 
-        <a href="https://www.linkedin.com/in/markhudadatov" target="_blank">Mark Khudadatov</a>.
+      <header class="card__header">
+        <h2>About this MVP</h2>
+      </header>
+      <p class="muted">
+        This is a lean, regulation-aware tool for small rooftop PV economics in Israel. It uses national averages for
+        power density and yield, and YAML-based tariff definitions so policy updates are easy to maintain.
       </p>
-      <p>Version v0.1.0 — Aug 2025. 
-        Source on <a href="https://github.com/YOUR-USERNAME/pv_mvp" target="_blank">GitHub</a>.
-      </p>
+      <p class="muted small">Version 1.0 — Aug 2025</p>
     </section>
-
   </main>
 
-  <!-- ===== Scripts ===== -->
-  <script>
-    let lastData = { years: [], cashflow: [] };
+  <!-- ===== Footer ===== -->
+  <footer class="site-footer">
+    <div class="container footer__wrap">
+      <p>© 2025 PV Dashboard — Israel. All rights reserved.</p>
+      <div class="footer__links">
+        <a href="#about">About</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </div>
+  </footer>
 
-    function updateMetrics(metrics) {
-      document.getElementById("mPayback").textContent = metrics.payback_year ?? "—";
-      document.getElementById("mNPV").textContent = metrics.npv != null ? "₪ " + Math.round(metrics.npv).toLocaleString("he-IL") : "—";
-      document.getElementById("mIRR").textContent = metrics.irr != null ? (metrics.irr*100).toFixed(1)+"%" : "—";
-    }
+  <!-- ===== V1 hooks (minimum logic) ===== -->
+<script>
+  // Responsive nav toggle
+  document.querySelector('[data-nav-toggle]')?.addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    const menu = document.getElementById('navMenu');
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!expanded));
+    menu.classList.toggle('is-open');
+  });
 
-    function drawCashflow(years, cashflow, mode="annual") {
-      lastData = { years, cashflow };
-      const el = document.getElementById("cashflowChart");
-      if (!window.Plotly || !el) return;
-      const y = mode==="cumulative"
-        ? cashflow.map((v,i)=> v + (i>0?cashflow.slice(0,i).reduce((a,b)=>a+b,0):0))
-        : cashflow;
-      const data = [{ x: years.map((_,i)=>2026+i), y, type:"bar" }];
-      Plotly.newPlot(el, data, {margin:{t:20}, xaxis:{title:"Year"}, yaxis:{title:"₪"}},{displayModeBar:false});
-    }
+  // Helper: serialize form to query string
+  function paramsFromForm(form) {
+    const fd = new FormData(form);
+    return new URLSearchParams([...fd.entries()]).toString();
+  }
 
-    document.getElementById("simForm")?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const qs = new URLSearchParams(new FormData(e.target)).toString();
+  // Update metric cards + hero stats
+  function updateMetrics(metrics) {
+    const pay = metrics.payback_year ?? '—';
+    const npv = metrics.npv != null ? Math.round(metrics.npv).toLocaleString('he-IL') : '—';
+    const irr = metrics.irr != null ? (metrics.irr * 100).toFixed(1) + '%' : 'n/a';
+
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('mPayback', pay);
+    set('mNPV', '₪ ' + npv);
+    set('mIRR', irr);
+
+    set('statPayback', typeof pay === 'number' ? pay + 'y' : '—');
+    set('statNPV', '₪ ' + npv);
+    set('statIRR', irr);
+  }
+
+  // Draw cashflow bar chart
+  function drawCashflow(years, cashflow) {
+    const el = document.getElementById('cashflowChart');
+    if (!window.Plotly || !el) return;
+    const data = [{ x: years, y: cashflow, type: 'bar', hovertemplate: 'Year %{x}<br>₪%{y:,.0f}<extra></extra>' }];
+    const layout = {
+      margin: { t: 24, r: 16, b: 40, l: 56 },
+      paper_bgcolor: 'transparent',
+      plot_bgcolor: 'transparent',
+      yaxis: { tickprefix: '₪', gridcolor: '#2a2f3b' },
+      xaxis: { gridcolor: '#2a2f3b' }
+    };
+    const config = { displayModeBar: false, responsive: true };
+    Plotly.react(el, data, layout, config);
+  }
+
+  // Submit form -> call API
+  document.getElementById('simForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const btn = document.getElementById('btnRun');
+    btn.disabled = true; btn.textContent = 'Calculating...';
+
+    try {
+      const qs = paramsFromForm(form);
       const res = await fetch(`/api/sim?${qs}`);
+      if (!res.ok) throw new Error('Request failed: ' + res.status);
       const data = await res.json();
-      if (data.status!=="ok") return alert("Error: "+(data.message||"failed"));
-      updateMetrics(data.metrics||{});
-      drawCashflow(data.years||[], data.cashflow||[]);
-    });
 
-    document.getElementById("btnReset")?.addEventListener("click", ()=>{
-      document.getElementById("simForm").reset();
-      updateMetrics({});
+      updateMetrics(data.metrics || {});
+      drawCashflow(data.years || [], data.cashflow || []);
+    } catch (err) {
+      console.error(err);
+      updateMetrics({ payback_year: '—', npv: null, irr: null });
       drawCashflow([], []);
-    });
+      alert('Calculation failed. Please try again.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Run calculation';
+    }
+  });
 
-    document.querySelectorAll(".preset").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        document.querySelectorAll(".preset").forEach(b=>b.classList.remove("is-active"));
-        btn.classList.add("is-active");
-        document.querySelector("select[name=loan_scenario]").value = btn.dataset.scenario;
-      });
+  // Reset button
+  document.getElementById('btnReset')?.addEventListener('click', () => {
+    document.getElementById('simForm').reset();
+    ['mPayback','mNPV','mIRR','statPayback','statNPV','statIRR'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.textContent = '—';
     });
+    const ch = document.getElementById('cashflowChart');
+    if (ch && window.Plotly) Plotly.purge(ch);
+  });
+</script>
 
-    document.querySelectorAll(".chart-toggle button").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        document.querySelectorAll(".chart-toggle button").forEach(b=>b.classList.remove("active"));
-        btn.classList.add("active");
-        drawCashflow(lastData.years, lastData.cashflow, btn.dataset.mode);
-      });
-    });
-  </script>
 </body>
 </html>
