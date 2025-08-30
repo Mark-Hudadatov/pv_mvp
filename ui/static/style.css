@@ -1,0 +1,4 @@
+body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 800px; }
+label { display: block; margin: 0.5rem 0; }
+button { margin-top: 1rem; padding: 0.5rem 1rem; }
+#results { margin-top: 2rem; padding:1rem; background:#f8f9fa; border-radius:8px; }
