@@ -1,0 +1,18 @@
+nominal:
+  up_to_15_kw: 0.48
+  from_16_to_30_kw: 0.41
+accelerated_payback:
+  window:
+    start_application: "2025-03-12"
+    end_sync: "2026-12-31"
+  years_high: 5
+  tier1_up_to_15_kw:
+    high_phase: 0.60
+    low_phase: 0.39
+  tier2_15_to_30_kw:
+    high_phase: 0.3936
+    low_phase: 0.3731
+cpi_linked:
+  max_kw: 15
+  base_rate: 0.387
+  indexation: CPI
