@@ -30,3 +30,8 @@ def api_sim(kWp: float = 20, route: str = "accelerated",
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.get("/", include_in_schema=False)
+@app.head("/", include_in_schema=False)
+def root():
+    return {"status": "ok"}
