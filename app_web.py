@@ -5,14 +5,13 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel, Field, field_validator
-
+from pydantic import BaseModel, Field, model_validator
 from services.simulate import simulate
 
 app = FastAPI()
 
 ROUTE_MAP = {"N": "nominal", "A": "accelerated", "C": "cpi"}
-FIN_MAP   = {"E": "equity", "L": "loan", "S": "leasing"}  # S = leasing
+FIN_MAP   = {"E": "equity",  "L": "loan",        "S": "leasing"}
 
 # ---------- Models ----------
 
@@ -21,35 +20,41 @@ class SimIn(BaseModel):
     route: Literal["N", "A", "C"]
     accounting: Literal["net_billing"] = "net_billing"
     finance_mode: Literal["E", "L", "S"]
-    loan_scenario: Literal["low", "base", "high"] | None = "base"
+    # делаем свободным, разрулим на уровне модели
+    loan_scenario: str | None = None
     self_consumption: float = Field(ge=0, le=1)
     apply_urban_premium: bool = True
 
-    @field_validator("loan_scenario", mode="before")
-    def _loan_req(cls, v, info):
-        # if finance_mode == "L" (loan), loan_scenario must be provided
-        data = info.data
-        if data.get("finance_mode") == "L" and (v is None or v == ""):
-            raise ValueError("loan_scenario required for finance_mode=loan")
-        return v or "base"
-
-# ---------- API ----------
+    @model_validator(mode="after")
+    def normalize(self):
+        # Приведём loan_scenario к нормальному виду
+        if self.finance_mode == "L":
+            map_ = {"L": "low", "B": "base", "H": "high"}
+            if self.loan_scenario is None or self.loan_scenario == "":
+                self.loan_scenario = "base"
+            self.loan_scenario = map_.get(self.loan_scenario, self.loan_scenario)
+            if self.loan_scenario not in {"low", "base", "high"}:
+                raise ValueError("loan_scenario must be low/base/high for finance_mode=loan")
+        else:
+            # для equity/leasing сценарий кредита не нужен
+            self.loan_scenario = None
+        return self
 
 @app.post("/api/simulate")
 def api_simulate(inp: SimIn):
     try:
+        scenario = inp.loan_scenario or "base"  # для loan уже нормализовано, для остальных -> "base"
         res = simulate(
             kwp=inp.kwp,
             route=ROUTE_MAP[inp.route],
             accounting=inp.accounting,
             self_consumption=inp.self_consumption,
             finance_mode=FIN_MAP[inp.finance_mode],
-            loan_scenario=inp.loan_scenario or "base",
+            loan_scenario=scenario,
             apply_urban_premium=inp.apply_urban_premium,
         )
         return {"status": "ok", **res}
     except Exception as e:
-        # Возвращаем мягкую ошибку, чтобы фронт не падал
         return {"status": "error", "message": str(e)}
 
 # Тестовый (legacy) эндпоинт — удобно дергать из браузера
