@@ -1,0 +1,39 @@
+power_density_kw_per_m2: 0.14
+yield_kwh_per_kwp_year:
+  base: 1500
+  north: 1600
+  center: 1750
+  south: 2000
+degradation_annual: 0.007
+retail_tariff_nis_per_kwh:
+  smb: 0.32
+capex_nis_per_kwp:
+  smb: 3800
+opex_pct_of_capex: 0.015
+urban_premium_addition: 0.06
+lifetime_years: 25
+discount_rate_real: 0.08
+use_nominal_cashflows: true
+finance_modes:
+  equity:
+    type: equity
+    description: "Full self-funding, all CAPEX paid upfront, all revenues kept."
+    downpayment: 1.0
+  loan:
+    type: loan
+    description: "Commercial bank loan for small PV system"
+    downpayment: 0.2
+    interest_rate:
+      low: 0.04
+      base: 0.05
+      high: 0.06
+    tenor_years:
+      low: 5
+      base: 7
+      high: 10
+  leasing:
+    type: leasing
+    description: "Installer finances, client pays 0 CAPEX, keeps % of revenue for X years"
+    downpayment: 0.0
+    client_share: 0.25
+    leasing_years: 15
