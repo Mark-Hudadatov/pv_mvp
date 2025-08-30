@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Israeli Rooftop PV — Calculator For SMB & Municipalities (≤30 kW)</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <!-- HTMX for progressive interactivity (optional, used later) -->
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12" defer></script>
+  <!-- Plotly CDN (charts hooked later via JS) -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js" defer></script>
+</head>
+
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- ===== Header / Brand ===== -->
+  <header class="site-header">
+    <div class="container header__wrap">
+      <div class="brand">
+        <div class="brand__logo" aria-hidden="true">☀️</div>
+        <div>
+          <div class="brand__title">PV Dashboard — Israel</div>
+          <div class="brand__subtitle">Simple payback & value for small rooftops (≤30 kW)</div>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Primary">
+        <button class="nav__btn" data-nav-toggle aria-expanded="false" aria-controls="navMenu">Menu</button>
+        <ul id="navMenu" class="nav__menu">
+          <li><a class="nav__link is-active" href="#">Calculator</a></li>
+          <li><a class="nav__link" href="#scenarios">Scenarios</a></li>
+          <li><a class="nav__link" href="#faq">FAQ</a></li>
+          <li><a class="nav__link" href="#about">About</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ===== Hero ===== -->
+  <section class="hero">
+    <div class="container hero__wrap">
+      <div class="hero__copy">
+        <h1 class="hero__title">Is PV worth it for your roof?</h1>
+        <p class="hero__text">
+          This calculator gives a transparent, regulation-aligned estimate for small-voltage rooftop PV in Israel.
+          You’ll see <strong>Payback</strong>, <strong>NPV</strong> and optional <strong>IRR</strong> based on the
+          government tariff routes and average technical assumptions. Perfect for SMB rooftops and condo roofs up to 30 kW.
+        </p>
+        <ul class="hero__bullets">
+          <li>Up to 30 kW (low voltage), Net Billing regime</li>
+          <li>Nominal / Accelerated / CPI-linked tariff routes</li>
+          <li>Equity, Loan, or Leasing financing</li>
+        </ul>
+        <a class="btn btn--primary" href="#calculator">Start calculation</a>
+      </div>
+
+      <div class="hero__panel">
+        <div class="stat">
+          <div class="stat__value" id="statPayback">—</div>
+          <div class="stat__label">Estimated Payback</div>
+        </div>
+        <div class="stat">
+          <div class="stat__value" id="statNPV">—</div>
+          <div class="stat__label">NPV (₪)</div>
+        </div>
+        <div class="stat">
+          <div class="stat__value" id="statIRR">—</div>
+          <div class="stat__label">IRR</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main id="main" class="main container">
+    <!-- ===== Calculator ===== -->
+    <section id="calculator" class="card card--grid">
+      <header class="card__header">
+        <h2>Calculator</h2>
+        <p class="muted">
+          Use national averages for a quick estimate. You can fine-tune later. All values are pre-tax and aligned with current PUA decisions.
+        </p>
+      </header>
+
+      <!-- Form -->
+      <form id="simForm" class="form" role="form" aria-label="PV Calculator">
+        <div class="form__row">
+          <label class="form__col">
+            <span class="form__label">System size (kWp)</span>
+            <input class="input" type="number" name="kWp" min="5" max="30" step="1" value="20" inputmode="decimal" />
+          </label>
+
+          <label class="form__col">
+            <span class="form__label">Tariff route</span>
+            <select class="input" name="route">
+              <option value="accelerated" selected>Accelerated</option>
+              <option value="nominal">Nominal</option>
+              <option value="cpi">CPI-linked</option>
+            </select>
+          </label>
+
+          <label class="form__col">
+            <span class="form__label">Finance mode</span>
+            <select class="input" name="finance_mode">
+              <option value="equity" selected>Equity (own funds)</option>
+              <option value="loan">Loan</option>
+              <option value="leasing">Leasing</option>
+            </select>
+          </label>
+
+          <label class="form__col">
+            <span class="form__label">Loan scenario</span>
+            <select class="input" name="loan_scenario">
+              <option value="conservative">Conservative</option>
+              <option value="base" selected>Base</option>
+              <option value="optimistic">Optimistic</option>
+            </select>
+          </label>
+
+          <label class="form__col">
+            <span class="form__label">Self-consumption (0–1)</span>
+            <input class="input" type="number" name="self_consumption" min="0" max="1" step="0.1" value="0.5" inputmode="decimal" />
+          </label>
+        </div>
+
+        <div class="form__actions">
+          <button type="submit" class="btn btn--primary" id="btnRun">Run calculation</button>
+          <button type="button" class="btn" id="btnReset">Reset</button>
+        </div>
+      </form>
+
+      <!-- Results -->
+      <div class="results">
+        <div class="results__metrics">
+          <div class="metric">
+            <div class="metric__label">Payback (years)</div>
+            <div class="metric__value" id="mPayback">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric__label">NPV (₪)</div>
+            <div class="metric__value" id="mNPV">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric__label">IRR</div>
+            <div class="metric__value" id="mIRR">—</div>
+          </div>
+        </div>
+
+        <div class="results__chart">
+          <div class="card">
+            <header class="card__header">
+              <h3>Annual Cash Flow</h3>
+              <p class="muted">Nominal cash flow over 25 years (incl. OPEX, financing where selected).</p>
+            </header>
+            <div id="cashflowChart" class="chart" role="img" aria-label="Annual cash flow bar chart"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card__aside">
+        <h3>Who is this for?</h3>
+        <ul class="list">
+          <li><strong>SMBs & municipalities</strong> — quick payback check for small rooftops</li>
+          <li><strong>Condo roofs (up to 30 kW)</strong> — transparent options incl. leasing</li>
+          <li><strong>Investors</strong> — fast, standardized view of rooftop economics</li>
+        </ul>
+        <p class="muted small">
+          Results are indicative and rely on national averages for area-to-kWp and yield. Local shading or unusual roof geometry may change outcomes.
+        </p>
+      </aside>
+    </section>
+
+    <!-- ===== Scenarios ===== -->
+    <section id="scenarios" class="card">
+      <header class="card__header">
+        <h2>Preset Scenarios</h2>
+        <p class="muted">One-click presets adjust financing and retail growth for a quick sensitivity view.</p>
+      </header>
+
+      <div class="presets">
+        <button class="preset" data-preset="conservative">Conservative</button>
+        <button class="preset is-active" data-preset="base">Base</button>
+        <button class="preset" data-preset="optimistic">Optimistic</button>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <header class="card__header"><h3>Assumptions</h3></header>
+          <ul class="list small">
+            <li>CAPEX & OPEX per current market ranges</li>
+            <li>Retail tariff growth per scenario track</li>
+            <li>Tariff route rules per PUA decisions (2021–2025)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <header class="card__header"><h3>Impact</h3></header>
+          <ul class="list small">
+            <li>Payback and NPV respond most to self-consumption and CAPEX</li>
+            <li>Accelerated route improves early-year cash flow</li>
+          </ul>
+        </div>
+        <div class="card">
+          <header class="card__header"><h3>Next steps</h3></header>
+          <ul class="list small">
+            <li>Add loan details (rate, tenor, downpayment)</li>
+            <li>Export PDF with assumptions</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section id="faq" class="card">
+      <header class="card__header">
+        <h2>FAQ</h2>
+      </header>
+      <div class="faq">
+        <details class="faq__item">
+          <summary>What roof size do I need for 30 kW?</summary>
+          <p>As a rule of thumb ~0.14 kW per m². A 30 kW system needs ~210–230 m² of usable area.</p>
+        </details>
+        <details class="faq__item">
+          <summary>Does self-consumption matter?</summary>
+          <p>Yes. Every kWh you consume on-site offsets the retail tariff, usually improving payback.</p>
+        </details>
+        <details class="faq__item">
+          <summary>Can I switch tariff routes after installation?</summary>
+          <p>No. PUA decisions indicate routes are chosen at application; changing later is restricted.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- ===== About ===== -->
+    <section id="about" class="card">
+      <header class="card__header">
+        <h2>About this MVP</h2>
+      </header>
+      <p class="muted">
+        This is a lean, regulation-aware tool for small rooftop PV economics in Israel. It uses national averages for
+        power density and yield, and YAML-based tariff definitions so policy updates are easy to maintain.
+      </p>
+      <p class="muted small">Version 1.0 — Aug 2025</p>
+    </section>
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="site-footer">
+    <div class="container footer__wrap">
+      <p>© 2025 PV Dashboard — Israel. All rights reserved.</p>
+      <div class="footer__links">
+        <a href="#about">About</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== Minimal hooks (no logic yet) ===== -->
+  <script>
+    // Responsive nav toggle (hook-ready)
+    document.querySelector('[data-nav-toggle]')?.addEventListener('click', (e) => {
+      const btn = e.currentTarget;
+      const menu = document.getElementById('navMenu');
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+      menu.classList.toggle('is-open');
+    });
+
+    // Form submit: placeholder — wire later to /api/sim via fetch or htmx
+    document.getElementById('simForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // TODO: fetch('/api/sim?...') -> update #mPayback, #mNPV, #mIRR, and Plotly chart
+      // Placeholder demo reset to indicate responsiveness:
+      document.getElementById('mPayback').textContent = '...';
+      document.getElementById('mNPV').textContent = '...';
+      document.getElementById('mIRR').textContent = '...';
+    });
+
+    document.getElementById('btnReset')?.addEventListener('click', () => {
+      document.getElementById('simForm').reset();
+      ['mPayback','mNPV','mIRR','statPayback','statNPV','statIRR'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '—';
+      });
+      const ch = document.getElementById('cashflowChart');
+      if (ch && window.Plotly) Plotly.purge(ch);
+    });
+  </script>
+</body>
+</html>
