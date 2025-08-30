@@ -30,8 +30,3 @@ def api_sim(kWp: float = 20, route: str = "accelerated",
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.getenv("PORT", 8000))
-    uvicorn.run("app_web:app", host="0.0.0.0", port=port, reload=True)
