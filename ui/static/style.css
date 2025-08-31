@@ -133,4 +133,7 @@ a:hover{color:var(--brand-2)}
 .preset.is-active{background:var(--brand); color:#0c1117; border-color:transparent}
 
 /* ===== Responsive ===== */
-@media (max-width: 9
+@media (max-width: 920px){
+  .app{grid-template-columns: 1fr}
+  .sidebar{position:relative; height:auto}
+}
