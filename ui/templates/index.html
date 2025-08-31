@@ -4,10 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PV Dashboard — Israel (≤30 kW)</title>
-  <!-- link your CSS here, JS later -->
+  <link rel="stylesheet" href="style.css" />
+  <!-- Plotly для графика, можно убрать если не нужен -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js" defer></script>
 </head>
 <body>
-<div class="app"><!-- layout grid: sidebar | main -->
+<div class="app">
 
   <!-- ===== Sidebar ===== -->
   <aside class="sidebar" aria-label="Primary">
@@ -44,31 +46,31 @@
       </div>
     </header>
 
-    <!-- KPI Row (bind values by id) -->
+    <!-- KPI Row -->
     <section class="kpi-row" aria-label="Key Indicators">
-      <article class="kpi">
+      <article class="kpi" role="status" aria-live="polite">
         <div class="kpi__icon" aria-hidden="true">⏱️</div>
         <div class="kpi__label">Estimated Payback</div>
         <div class="kpi__value" id="kpi-payback">—</div>
       </article>
-      <article class="kpi">
+      <article class="kpi" role="status" aria-live="polite">
         <div class="kpi__icon" aria-hidden="true">₪</div>
         <div class="kpi__label">NPV</div>
         <div class="kpi__value" id="kpi-npv">—</div>
       </article>
-      <article class="kpi">
+      <article class="kpi" role="status" aria-live="polite">
         <div class="kpi__icon" aria-hidden="true">📈</div>
         <div class="kpi__label">IRR</div>
         <div class="kpi__value" id="kpi-irr">—</div>
       </article>
-      <article class="kpi">
+      <article class="kpi kpi--muted">
         <div class="kpi__icon" aria-hidden="true">⚙️</div>
         <div class="kpi__label">LCOE (pilot)</div>
         <div class="kpi__value" id="kpi-lcoe">—</div>
       </article>
     </section>
 
-    <!-- Main grid (like reference) -->
+    <!-- Main grid -->
     <section class="grid" aria-label="Dashboard content">
 
       <!-- Large card: Annual Cash Flow -->
@@ -76,13 +78,12 @@
         <header class="card__header">
           <h2 id="acf-title">Annual Cash Flow</h2>
           <div class="toolbar" aria-label="View switches">
-            <button class="tab is-active" type="button">Annual</button>
-            <button class="tab" type="button">Cumulative</button>
-            <button class="tab" type="button">Sensitivity</button>
+            <button class="tab is-active" type="button" data-view="annual">Annual</button>
+            <button class="tab" type="button" data-view="cumulative">Cumulative</button>
+            <button class="tab" type="button" data-view="sensitivity">Sensitivity</button>
           </div>
         </header>
-        <!-- mount Plotly/Chart.js here -->
-        <div class="chart" id="chart-cashflow" aria-label="Cash flow chart placeholder"></div>
+        <div class="chart" id="chart-cashflow" aria-label="Cash flow chart"></div>
       </section>
 
       <!-- Right stack: info/help widgets -->
@@ -92,7 +93,7 @@
           <ul class="list small">
             <li><b>SMBs & municipalities</b> — quick payback check for small rooftops</li>
             <li><b>Condo roofs (≤30 kW)</b> — transparent options incl. leasing</li>
-            <li><b>Investors</b> — standardized view (IRR/NPV/LCOE)</li>
+            <li><b>Investors</b> — standardized view (IRR / NPV / LCOE)</li>
           </ul>
         </section>
 
@@ -100,7 +101,7 @@
           <header class="card__header"><h3 id="checklist-title">Checklist</h3></header>
           <ul class="list small" id="list-checks">
             <li>CAPEX ≤ ₪4,000/kWp → IRR typically &gt; 7%</li>
-            <li>Route matches PUA decision (Nominal/Accelerated/CPI)</li>
+            <li>Route matches PUA decision (Nominal / Accelerated / CPI)</li>
             <li>Self-consumption track applied consistently</li>
           </ul>
         </section>
@@ -120,19 +121,20 @@
             15 kW • Equity • CPI-linked
           </button>
         </div>
-        <p class="muted small">Presets auto-fill inputs below and re-run the calculation.</p>
+        <p class="muted small">Presets auto-fill inputs and re-run the calculation.</p>
       </section>
 
-      <!-- Bottom right: Customize (form placeholder) -->
+      <!-- Bottom right: Customize -->
       <section class="card" aria-labelledby="custom-title">
         <header class="card__header"><h3 id="custom-title">Customize</h3></header>
         <form id="form-sim" class="form" aria-label="PV Calculator">
           <div class="form__row">
-            <label class="form__col">
+            <label class="form__col icon--kwp">
               <span class="form__label">System size (kWp)</span>
               <input class="input" type="number" name="kWp" min="5" max="30" step="1" value="20" />
             </label>
-            <label class="form__col">
+
+            <label class="form__col icon--route">
               <span class="form__label">Tariff route</span>
               <select class="input" name="route" id="inp-route">
                 <option value="accelerated" selected>Accelerated</option>
@@ -140,7 +142,8 @@
                 <option value="cpi">CPI-linked</option>
               </select>
             </label>
-            <label class="form__col">
+
+            <label class="form__col icon--fin">
               <span class="form__label">Finance mode</span>
               <select class="input" name="finance_mode" id="inp-finance">
                 <option value="equity" selected>Equity</option>
@@ -148,7 +151,8 @@
                 <option value="leasing">Leasing</option>
               </select>
             </label>
-            <label class="form__col">
+
+            <label class="form__col icon--loan">
               <span class="form__label">Loan scenario</span>
               <select class="input" name="loan_scenario" id="inp-loan">
                 <option value="conservative">Conservative</option>
@@ -156,11 +160,13 @@
                 <option value="optimistic">Optimistic</option>
               </select>
             </label>
-            <label class="form__col">
+
+            <label class="form__col icon--self">
               <span class="form__label">Self-consumption (0–1)</span>
               <input class="input" type="number" name="self_consumption" min="0" max="1" step="0.1" value="0.5" />
             </label>
           </div>
+
           <div class="form__actions">
             <button class="btn btn--primary" type="submit" id="btn-run">Run calculation</button>
             <button class="btn" type="reset" id="btn-reset">Reset</button>
@@ -169,8 +175,136 @@
       </section>
 
     </section>
-
   </main>
 </div>
+
+<!-- ===== Minimal JS: tabs, presets, /api/sim ===== -->
+<script>
+(function(){
+  // Helper: set text
+  const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  // Tabs (Annual / Cumulative / Sensitivity)
+  const tabButtons = document.querySelectorAll('.tab');
+  let currentView = 'annual';
+  tabButtons.forEach(btn => btn.addEventListener('click', () => {
+    tabButtons.forEach(b => b.classList.toggle('is-active', b===btn));
+    currentView = btn.dataset.view;
+    // перерисуем график, если уже есть данные в памяти
+    if (window.__simData) renderChart(window.__simData);
+  }));
+
+  // Presets autofill
+  const presets = {
+    equity20: { kWp:20, route:'accelerated', finance_mode:'equity',  loan_scenario:'base', self_consumption:0.5 },
+    loan30:   { kWp:30, route:'accelerated', finance_mode:'loan',    loan_scenario:'base', self_consumption:0.6 },
+    cpi15:    { kWp:15, route:'cpi',         finance_mode:'equity',  loan_scenario:'base', self_consumption:0.4 }
+  };
+  const form = document.getElementById('form-sim');
+  document.querySelectorAll('#presets-list .preset').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      document.querySelectorAll('#presets-list .preset').forEach(x=>{
+        x.classList.remove('is-active'); x.setAttribute('aria-selected','false');
+      });
+      btn.classList.add('is-active'); btn.setAttribute('aria-selected','true');
+      const p = presets[btn.dataset.preset]; if (!p) return;
+      // заполнение формы
+      for (const [k,v] of Object.entries(p)) { if (form.elements[k]) form.elements[k].value = v; }
+      // автозапуск рассчёта
+      await runSim();
+    });
+  });
+
+  // Serialize form
+  function formParams(f){
+    const fd = new FormData(f);
+    return new URLSearchParams([...fd.entries()]).toString();
+  }
+
+  // Render KPI values
+  function renderKPIs(m){
+    setText('kpi-payback', (typeof m?.payback_year === 'number') ? (m.payback_year + 'y') : '—');
+    setText('kpi-npv',     (typeof m?.npv === 'number') ? ('₪ ' + Math.round(m.npv).toLocaleString('he-IL')) : '—');
+    setText('kpi-irr',     (typeof m?.irr === 'number') ? ((m.irr*100).toFixed(1) + '%') : '—');
+    setText('kpi-lcoe',    (typeof m?.lcoe === 'number') ? ('₪ ' + m.lcoe.toFixed(2) + '/kWh') : '—');
+  }
+
+  // Render Chart (Annual / Cumulative / Sensitivity)
+  function renderChart(data){
+    const el = document.getElementById('chart-cashflow');
+    if (!el || !window.Plotly) return;
+
+    let x = data.years || [];
+    let y = [];
+
+    if (currentView === 'annual') {
+      y = data.cashflow || [];
+    } else if (currentView === 'cumulative') {
+      const arr = data.cashflow || [];
+      let cum = 0; y = arr.map(v => (cum += (v||0)));
+    } else if (currentView === 'sensitivity') {
+      // простая заглушка: показываем baseline +/-10% (если нет сервера)
+      const arr = data.cashflow || [];
+      const base = arr.map(v => v||0);
+      const up = base.map(v => v*1.1);
+      const dn = base.map(v => v*0.9);
+      Plotly.react(el, [
+        { x, y: dn,  type:'scatter', mode:'lines', name:'-10%' },
+        { x, y: base,type:'scatter', mode:'lines', name:'Base' },
+        { x, y: up,  type:'scatter', mode:'lines', name:'+10%' }
+      ], {
+        margin:{t:24,r:16,b:40,l:56},
+        paper_bgcolor:'transparent', plot_bgcolor:'transparent',
+        yaxis:{ tickprefix:'₪', gridcolor:'#e7ebf2' }, xaxis:{ gridcolor:'#e7ebf2' }
+      }, {displayModeBar:false, responsive:true});
+      return;
+    }
+
+    // default: колонная диаграмма
+    Plotly.react(el, [{
+      x, y, type:'bar', hovertemplate:'Year %{x}<br>₪%{y:,.0f}<extra></extra>'
+    }], {
+      margin:{t:24,r:16,b:40,l:56},
+      paper_bgcolor:'transparent', plot_bgcolor:'transparent',
+      yaxis:{ tickprefix:'₪', gridcolor:'#e7ebf2' }, xaxis:{ gridcolor:'#e7ebf2' }
+    }, {displayModeBar:false, responsive:true});
+  }
+
+  // Call /api/sim
+  async function runSim(){
+    const btn = document.getElementById('btn-run');
+    btn.disabled = true; const old = btn.textContent; btn.textContent = 'Calculating…';
+    try{
+      const qs = formParams(form);
+      const res = await fetch(`/api/sim?${qs}`);
+      if (!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json();
+      // ожидаемый формат: { metrics:{payback_year,npv,irr,lcoe}, years:[], cashflow:[] }
+      window.__simData = data || {};
+      renderKPIs(data.metrics || {});
+      renderChart(data || {});
+    }catch(err){
+      console.error(err);
+      renderKPIs({});
+      renderChart({ years:[], cashflow:[] });
+      alert('Calculation failed. Please try again.');
+    }finally{
+      btn.disabled = false; btn.textContent = old;
+    }
+  }
+
+  // Form submit
+  form?.addEventListener('submit', (e)=>{ e.preventDefault(); runSim(); });
+  document.getElementById('btn-reset')?.addEventListener('click', ()=>{
+    renderKPIs({}); renderChart({ years:[], cashflow:[] });
+  });
+
+  // Автозапуск для активного пресета при загрузке (опционально)
+  window.addEventListener('load', ()=>{
+    const active = document.querySelector('#presets-list .preset.is-active');
+    active?.click();
+  });
+})();
+</script>
 </body>
 </html>
