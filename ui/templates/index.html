@@ -3,160 +3,174 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Green Energy Dashboard • Template</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>PV Dashboard — Israel (≤30 kW)</title>
+  <!-- link your CSS here, JS later -->
 </head>
 <body>
-<div class="app">
+<div class="app"><!-- layout grid: sidebar | main -->
 
-  <!-- ========== Sidebar ========== -->
+  <!-- ===== Sidebar ===== -->
   <aside class="sidebar" aria-label="Primary">
     <div class="brand">
-      <div class="brand__logo" aria-hidden="true">
-        <!-- simple leaf logo -->
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M20 4c-6.4 1-11.4 5.9-12.9 12.2a.8.8 0 0 0 .9 1l3.6-.7c2.1-.4 4.1-1.5 5.7-3.1 1.6-1.6 2.7-3.6 3.1-5.7L21 4.9a.8.8 0 0 0-.9-.9Z" fill="#22c55e"/>
-          <path d="M10 6C6 7.5 3.5 10.6 3 15c0 3 2 5 5 5 4.4-.5 7.5-3 9-7" stroke="#16a34a" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-      </div>
+      <div class="brand__logo" aria-hidden="true">☀️</div>
       <div class="brand__text">
-        <div class="brand__title">A•Green</div>
-        <div class="brand__subtitle">Sample Logo</div>
+        <div class="brand__title">PV Dashboard</div>
+        <div class="brand__subtitle">Israel • ≤30 kW</div>
       </div>
     </div>
 
-    <nav class="nav">
+    <nav class="nav" aria-label="Main">
       <a class="nav__item is-active" href="#" aria-current="page">
-        <span class="nav__icon" aria-hidden="true">📊</span> Dashboard
+        <span class="nav__icon" aria-hidden="true">📊</span> Calculator
       </a>
-      <a class="nav__item" href="#"><span class="nav__icon" aria-hidden="true">📈</span> Analysis</a>
+      <a class="nav__item" href="#"><span class="nav__icon" aria-hidden="true">📁</span> Scenarios</a>
       <a class="nav__item" href="#"><span class="nav__icon" aria-hidden="true">📄</span> Reports</a>
-      <a class="nav__item" href="#"><span class="nav__icon" aria-hidden="true">👤</span> My Profile</a>
+      <a class="nav__item" href="#"><span class="nav__icon" aria-hidden="true">📚</span> Docs</a>
     </nav>
   </aside>
 
-  <!-- ========== Main ========== -->
+  <!-- ===== Main ===== -->
   <main class="main">
 
     <!-- Topbar -->
     <header class="topbar">
-      <div class="search">
-        <svg class="search__icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.3-4.3m1.3-5A7 7 0 1 1 7 4a7 7 0 0 1 11 7.7Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        <input class="search__input" type="search" placeholder="Search" aria-label="Search" />
-      </div>
+      <form class="search" role="search" aria-label="Search">
+        <input class="search__input" type="search" placeholder="Search" />
+      </form>
       <div class="topbar__right">
-        <button class="chip">English ▾</button>
-        <button class="chip" title="Notifications">🔔</button>
-        <div class="avatar" title="Sivakumar"></div>
+        <button class="chip" type="button">English ▾</button>
+        <button class="chip" type="button" title="Notifications">🔔</button>
+        <div class="avatar" title="User"></div>
       </div>
     </header>
 
-    <!-- KPI Row -->
+    <!-- KPI Row (bind values by id) -->
     <section class="kpi-row" aria-label="Key Indicators">
-      <!-- attach your values by IDs below -->
       <article class="kpi">
-        <div class="kpi__icon" aria-hidden="true">⚡</div>
-        <div class="kpi__label">Inverter Power</div>
-        <div class="kpi__value" id="kpi-inverter">2.329 kW</div>
+        <div class="kpi__icon" aria-hidden="true">⏱️</div>
+        <div class="kpi__label">Estimated Payback</div>
+        <div class="kpi__value" id="kpi-payback">—</div>
       </article>
       <article class="kpi">
-        <div class="kpi__icon" aria-hidden="true">🔋</div>
-        <div class="kpi__label">Battery Power</div>
-        <div class="kpi__value" id="kpi-battery">12.528 kW</div>
+        <div class="kpi__icon" aria-hidden="true">₪</div>
+        <div class="kpi__label">NPV</div>
+        <div class="kpi__value" id="kpi-npv">—</div>
       </article>
       <article class="kpi">
-        <div class="kpi__icon" aria-hidden="true">🏠</div>
-        <div class="kpi__label">Power Expended</div>
-        <div class="kpi__value" id="kpi-expended">8.197 kW</div>
+        <div class="kpi__icon" aria-hidden="true">📈</div>
+        <div class="kpi__label">IRR</div>
+        <div class="kpi__value" id="kpi-irr">—</div>
+      </article>
+      <article class="kpi">
+        <div class="kpi__icon" aria-hidden="true">⚙️</div>
+        <div class="kpi__label">LCOE (pilot)</div>
+        <div class="kpi__value" id="kpi-lcoe">—</div>
       </article>
     </section>
 
-    <!-- Main grid -->
-    <section class="grid">
-      <!-- Large chart card -->
-      <section class="card card--lg" aria-labelledby="energy-title">
+    <!-- Main grid (like reference) -->
+    <section class="grid" aria-label="Dashboard content">
+
+      <!-- Large card: Annual Cash Flow -->
+      <section class="card card--lg" aria-labelledby="acf-title">
         <header class="card__header">
-          <h2 id="energy-title">Energy Generation</h2>
-          <div class="tabs">
-            <button class="tab is-active">Monthly</button>
-            <button class="tab">Weekly</button>
-            <button class="tab">Day</button>
-          </div>
-          <div class="toolbar">
-            <button class="btn btn--ghost">◀</button>
-            <button class="btn btn--ghost">Today</button>
-            <button class="btn btn--ghost">07 Jul, 2023 ▾</button>
+          <h2 id="acf-title">Annual Cash Flow</h2>
+          <div class="toolbar" aria-label="View switches">
+            <button class="tab is-active" type="button">Annual</button>
+            <button class="tab" type="button">Cumulative</button>
+            <button class="tab" type="button">Sensitivity</button>
           </div>
         </header>
-        <!-- mount your Plotly/Chart.js here -->
-        <div class="chart" id="chart-energy" aria-label="Energy chart placeholder"></div>
+        <!-- mount Plotly/Chart.js here -->
+        <div class="chart" id="chart-cashflow" aria-label="Cash flow chart placeholder"></div>
       </section>
 
-      <!-- Right widgets (like reference) -->
-      <aside class="stack">
-        <section class="card" aria-labelledby="temp-title">
-          <header class="card__header"><h3 id="temp-title">Current Temperature</h3></header>
-          <div class="row row--between small">
-            <button class="chip chip--ghost is-active">Outdoor Sensor</button>
-            <button class="chip chip--ghost">Indoor Sensor</button>
-          </div>
-          <div class="gauge">
-            <div class="gauge__arc" aria-hidden="true"></div>
-            <div class="gauge__value" id="gauge-temp">38°C</div>
-          </div>
+      <!-- Right stack: info/help widgets -->
+      <aside class="stack" aria-label="Info widgets">
+        <section class="card" aria-labelledby="who-title">
+          <header class="card__header"><h3 id="who-title">Who is this for?</h3></header>
+          <ul class="list small">
+            <li><b>SMBs & municipalities</b> — quick payback check for small rooftops</li>
+            <li><b>Condo roofs (≤30 kW)</b> — transparent options incl. leasing</li>
+            <li><b>Investors</b> — standardized view (IRR/NPV/LCOE)</li>
+          </ul>
         </section>
 
-        <section class="card" aria-labelledby="bat-title">
-          <header class="card__header"><h3 id="bat-title">Battery Charge Level</h3></header>
-          <div class="battery">
-            <div class="battery__icon" aria-hidden="true">🔋</div>
-            <div class="battery__value" id="battery-level">62%</div>
-          </div>
+        <section class="card" aria-labelledby="checklist-title">
+          <header class="card__header"><h3 id="checklist-title">Checklist</h3></header>
+          <ul class="list small" id="list-checks">
+            <li>CAPEX ≤ ₪4,000/kWp → IRR typically &gt; 7%</li>
+            <li>Route matches PUA decision (Nominal/Accelerated/CPI)</li>
+            <li>Self-consumption track applied consistently</li>
+          </ul>
         </section>
       </aside>
 
-      <!-- Bottom row cards -->
-      <section class="card" aria-labelledby="home-title">
-        <header class="card__header"><h3 id="home-title">Home Energy Consumption</h3>
-          <button class="chip chip--ghost">Jul 2023 ▾</button>
-        </header>
-        <div class="chart" id="chart-home"></div>
+      <!-- Bottom left: Presets -->
+      <section class="card" aria-labelledby="presets-title">
+        <header class="card__header"><h3 id="presets-title">Presets</h3></header>
+        <div class="presets" role="listbox" aria-label="Scenario presets" id="presets-list">
+          <button class="preset is-active" role="option" aria-selected="true" data-preset="equity20">
+            20 kW • Equity • Accelerated
+          </button>
+          <button class="preset" role="option" aria-selected="false" data-preset="loan30">
+            30 kW • Loan • Accelerated
+          </button>
+          <button class="preset" role="option" aria-selected="false" data-preset="cpi15">
+            15 kW • Equity • CPI-linked
+          </button>
+        </div>
+        <p class="muted small">Presets auto-fill inputs below and re-run the calculation.</p>
       </section>
 
-      <section class="card" aria-labelledby="usage-title">
-        <header class="card__header"><h3 id="usage-title">Current Energy Usage</h3></header>
-        <div class="usage">
-          <ul class="usage__list">
-            <li><span>Per Minute</span><strong id="u-min">0.66 kWh</strong></li>
-            <li><span>Per Hour</span><strong id="u-hour">20.86 kWh</strong></li>
-            <li><span>Per 3 Hours</span><strong id="u-3h">64.97 kWh</strong></li>
-          </ul>
-          <div class="chart" id="chart-usage"></div>
-        </div>
+      <!-- Bottom right: Customize (form placeholder) -->
+      <section class="card" aria-labelledby="custom-title">
+        <header class="card__header"><h3 id="custom-title">Customize</h3></header>
+        <form id="form-sim" class="form" aria-label="PV Calculator">
+          <div class="form__row">
+            <label class="form__col">
+              <span class="form__label">System size (kWp)</span>
+              <input class="input" type="number" name="kWp" min="5" max="30" step="1" value="20" />
+            </label>
+            <label class="form__col">
+              <span class="form__label">Tariff route</span>
+              <select class="input" name="route" id="inp-route">
+                <option value="accelerated" selected>Accelerated</option>
+                <option value="nominal">Nominal</option>
+                <option value="cpi">CPI-linked</option>
+              </select>
+            </label>
+            <label class="form__col">
+              <span class="form__label">Finance mode</span>
+              <select class="input" name="finance_mode" id="inp-finance">
+                <option value="equity" selected>Equity</option>
+                <option value="loan">Loan</option>
+                <option value="leasing">Leasing</option>
+              </select>
+            </label>
+            <label class="form__col">
+              <span class="form__label">Loan scenario</span>
+              <select class="input" name="loan_scenario" id="inp-loan">
+                <option value="conservative">Conservative</option>
+                <option value="base" selected>Base</option>
+                <option value="optimistic">Optimistic</option>
+              </select>
+            </label>
+            <label class="form__col">
+              <span class="form__label">Self-consumption (0–1)</span>
+              <input class="input" type="number" name="self_consumption" min="0" max="1" step="0.1" value="0.5" />
+            </label>
+          </div>
+          <div class="form__actions">
+            <button class="btn btn--primary" type="submit" id="btn-run">Run calculation</button>
+            <button class="btn" type="reset" id="btn-reset">Reset</button>
+          </div>
+        </form>
       </section>
+
     </section>
 
-    <!-- Optional: slide-out panel to mount your PV calculator -->
-    <aside class="drawer" id="calc-drawer" aria-hidden="true">
-      <header class="drawer__header">
-        <h3>PV Calculator</h3>
-        <button class="btn btn--ghost" data-drawer-close>✕</button>
-      </header>
-      <div id="calc-mount"><!-- mount your form here --></div>
-    </aside>
-
-    <button class="fab" data-drawer-open title="Open PV Calculator">➕</button>
   </main>
 </div>
-
-<!-- Minimal JS: drawer toggle (no deps) -->
-<script>
-  document.querySelector('[data-drawer-open]')?.addEventListener('click',()=>{
-    document.getElementById('calc-drawer').setAttribute('aria-hidden','false');
-  });
-  document.querySelector('[data-drawer-close]')?.addEventListener('click',()=>{
-    document.getElementById('calc-drawer').setAttribute('aria-hidden','true');
-  });
-</script>
 </body>
 </html>
