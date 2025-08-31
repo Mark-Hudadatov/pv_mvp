@@ -3,34 +3,38 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PV Dashboard — Israel (≤30 kW)</title>
+  <title>PV Dashboard for SMB — Israel (≤30 kW)</title>
   <link rel="stylesheet" href="/static/style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12" defer></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js" defer></script>
 </head>
-
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 
-<!-- ===== App Shell (Sidebar + Main) ===== -->
+<!-- ===== App Shell ===== -->
 <div class="app">
-  <!-- Sidebar -->
-  <aside class="sidebar" aria-label="Controls and navigation">
+  <!-- ===== Sidebar ===== -->
+  <aside class="sidebar" aria-label="Controls">
     <div class="brand-mini">
       <div class="brand__logo" aria-hidden="true">☀️</div>
       <div>
-        <div class="brand__title">PV Dashboard — Israel</div>
+        <div class="brand__title">PV Dashboard for SMB in Israel</div>
         <div class="brand__subtitle">≤30 kW • Net Billing</div>
       </div>
     </div>
 
-    <!-- Presets quick switch -->
+    <!-- Presets -->
     <section class="sb-section">
       <h2 class="sb-title">Presets</h2>
-      <div class="presets presets--stack">
-        <button class="preset is-active" data-preset="base">Base 20 kW • Equity</button>
-        <button class="preset" data-preset="loan30">30 kW • Loan</button>
-        <button class="preset" data-preset="cpi15">15 kW • CPI route</button>
+      <div class="presets presets--stack" role="listbox" aria-label="Scenario presets">
+        <button class="preset is-active" role="option" aria-selected="true" data-preset="base">
+          20 kW • Equity • Accelerated
+        </button>
+        <button class="preset" role="option" aria-selected="false" data-preset="loan30">
+          30 kW • Loan • Accelerated
+        </button>
+        <button class="preset" role="option" aria-selected="false" data-preset="cpi15">
+          15 kW • Equity • CPI-linked
+        </button>
       </div>
     </section>
 
@@ -40,7 +44,7 @@
       <form id="simForm" class="form" role="form" aria-label="PV Calculator">
         <label class="form__col">
           <span class="form__label">System size (kWp)</span>
-          <input class="input" type="number" name="kWp" min="5" max="30" step="1" value="20" />
+          <input class="input" type="number" name="kWp" min="5" max="30" step="1" value="20" inputmode="decimal" />
         </label>
 
         <label class="form__col">
@@ -71,41 +75,41 @@
         </label>
 
         <label class="form__col">
-          <span class="form__label">Self-consumption (0–1)</span>
-          <input class="input" type="number" name="self_consumption" min="0" max="1" step="0.1" value="0.5" />
+          <span class="form__label">Self-consumption (0–100%)</span>
+          <input class="input" type="number" name="self_consumption" min="0" max="1" step="0.1" value="0.5" inputmode="decimal" />
         </label>
 
         <div class="form__actions sticky-actions">
-          <button type="submit" class="btn btn--primary" id="btnRun">Run calculation</button>
+          <button type="submit" class="btn btn--primary" id="btnRun" aria-live="polite">Run calculation</button>
           <button type="button" class="btn" id="btnReset">Reset</button>
         </div>
       </form>
     </section>
 
-    <!-- Help / Docs -->
+    <!-- Docs -->
     <section class="sb-section sb-help">
       <h2 class="sb-title">Docs</h2>
       <ul class="list small">
-        <li>Tariff routes: Nominal / Accelerated / CPI-linked</li>
-        <li>Financing: Equity, Loan (annuity), Leasing</li>
+        <li>Routes: Nominal / Accelerated / CPI-linked</li>
+        <li>Finance: Equity, Loan (annuity), Leasing</li>
         <li>Key drivers: CAPEX, self-consumption</li>
       </ul>
     </section>
   </aside>
 
-  <!-- Main Panel -->
-  <main id="main" class="main">
-    <!-- KPI Row -->
+  <!-- ===== Main Panel ===== -->
+  <main id="main" class="main" tabindex="-1">
+    <!-- KPI -->
     <section class="kpi-row" aria-label="Key metrics">
-      <div class="kpi">
+      <div class="kpi" role="status" aria-live="polite">
         <div class="kpi__label">Estimated Payback</div>
         <div class="kpi__value" id="statPayback">—</div>
       </div>
-      <div class="kpi">
+      <div class="kpi" role="status" aria-live="polite">
         <div class="kpi__label">NPV (₪)</div>
         <div class="kpi__value" id="statNPV">—</div>
       </div>
-      <div class="kpi">
+      <div class="kpi" role="status" aria-live="polite">
         <div class="kpi__label">IRR</div>
         <div class="kpi__value" id="statIRR">—</div>
       </div>
@@ -118,19 +122,19 @@
     <!-- Tabs -->
     <section class="tabs card" aria-label="Views">
       <div class="tabs__list" role="tablist">
-        <button class="tab is-active" role="tab" aria-selected="true" data-tab="v-presets">Presets</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="v-explain">Explanation</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="v-custom">Customize</button>
+        <button class="tab is-active" role="tab" aria-selected="true" aria-controls="v-presets" id="t-presets" data-tab="v-presets">Presets</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="v-explain" id="t-explain" data-tab="v-explain">Explanation</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="v-custom" id="t-custom" data-tab="v-custom">Customize</button>
       </div>
 
       <!-- Presets view -->
-      <div class="tabview is-active" id="v-presets" role="tabpanel">
+      <div class="tabview is-active" id="v-presets" role="tabpanel" aria-labelledby="t-presets">
         <div class="cards-grid">
           <div class="card soft">
             <header class="card__header"><h3>Assumptions</h3></header>
             <ul class="list small">
-              <li>Yield: 1500 kWh/kWp (Year 1), degradation 0.7%/y</li>
-              <li>Retail growth track: −2% / 0% / +2%</li>
+              <li>Yield 1500 kWh/kWp (Year 1), degradation 0.7%/y</li>
+              <li>Retail growth track −2% / 0% / +2%</li>
               <li>Tariff routing per current PUA decisions</li>
             </ul>
           </div>
@@ -139,7 +143,7 @@
             <ul class="list small">
               <li>Higher self-consumption → shorter payback</li>
               <li>Accelerated route ↑ early cash flow</li>
-              <li>Loan shifts cash to annual annuity</li>
+              <li>Loan shifts cash to annuity</li>
             </ul>
           </div>
           <div class="card soft">
@@ -158,11 +162,12 @@
             <p class="muted">Nominal cash flow over 25 years (incl. OPEX and financing where selected).</p>
           </header>
           <div id="cashflowChart" class="chart" role="img" aria-label="Annual cash flow bar chart"></div>
+          <div class="chart__empty" id="chartEmpty" hidden>Run a calculation to see the chart.</div>
         </div>
       </div>
 
       <!-- Explanation view -->
-      <div class="tabview" id="v-explain" role="tabpanel" hidden>
+      <div class="tabview" id="v-explain" role="tabpanel" aria-labelledby="t-explain" hidden>
         <div class="cards-grid">
           <div class="card soft">
             <header class="card__header"><h3>Tariff routes</h3></header>
@@ -177,13 +182,13 @@
             <ul class="list small">
               <li><b>Equity</b>: CF₀ = −CAPEX</li>
               <li><b>Loan</b>: annuity A = L·i/(1−(1+i)⁻ⁿ)</li>
-              <li><b>Leasing</b>: CF₀ = 0, lease in OPEX</li>
+              <li><b>Leasing</b>: CF₀ = 0, lease added to OPEX</li>
             </ul>
           </div>
           <div class="card soft">
             <header class="card__header"><h3>KPIs</h3></header>
             <ul class="list small">
-              <li><b>Payback</b>: first year cum. CF ≥ 0</li>
+              <li><b>Payback</b>: first year with cumulative CF ≥ 0</li>
               <li><b>NPV</b>: Σ CFₜ/(1+r)ᵗ</li>
               <li><b>IRR</b>: r where NPV=0</li>
               <li><b>LCOE</b> (pilot): total cost / lifetime kWh</li>
@@ -193,7 +198,7 @@
       </div>
 
       <!-- Customize view -->
-      <div class="tabview" id="v-custom" role="tabpanel" hidden>
+      <div class="tabview" id="v-custom" role="tabpanel" aria-labelledby="t-custom" hidden>
         <div class="cards-grid">
           <div class="card soft">
             <header class="card__header"><h3>Scenario name</h3></header>
@@ -215,7 +220,6 @@
         </div>
       </div>
     </section>
-
   </main>
 </div>
 
@@ -226,8 +230,10 @@
   const tabViews = document.querySelectorAll('.tabview');
   tabButtons.forEach(btn => btn.addEventListener('click', () => {
     const id = btn.dataset.tab;
-    tabButtons.forEach(b => b.classList.toggle('is-active', b===btn));
-    tabButtons.forEach(b => b.setAttribute('aria-selected', b===btn ? 'true' : 'false'));
+    tabButtons.forEach(b => {
+      b.classList.toggle('is-active', b===btn);
+      b.setAttribute('aria-selected', b===btn ? 'true' : 'false');
+    });
     tabViews.forEach(v => {
       const active = v.id === id;
       v.classList.toggle('is-active', active);
@@ -235,74 +241,75 @@
     });
   }));
 
-  // Preset buttons (client-side param fill)
+  // Presets autofill
   const presetsMap = {
-    base: { kWp:20, route:'accelerated', finance_mode:'equity', loan_scenario:'base', self_consumption:0.5 },
-    loan30: { kWp:30, route:'accelerated', finance_mode:'loan', loan_scenario:'base', self_consumption:0.6 },
-    cpi15: { kWp:15, route:'cpi', finance_mode:'equity', loan_scenario:'base', self_consumption:0.4 }
+    base:   { kWp:20, route:'accelerated', finance_mode:'equity',  loan_scenario:'base', self_consumption:0.5 },
+    loan30: { kWp:30, route:'accelerated', finance_mode:'loan',    loan_scenario:'base', self_consumption:0.6 },
+    cpi15:  { kWp:15, route:'cpi',         finance_mode:'equity',  loan_scenario:'base', self_consumption:0.4 }
   };
   document.querySelectorAll('.preset').forEach(p => p.addEventListener('click', () => {
-    document.querySelectorAll('.preset').forEach(x => x.classList.remove('is-active'));
-    p.classList.add('is-active');
-    const f = document.getElementById('simForm');
-    const s = presetsMap[p.dataset.preset];
+    document.querySelectorAll('.preset').forEach(x => { x.classList.remove('is-active'); x.setAttribute('aria-selected','false'); });
+    p.classList.add('is-active'); p.setAttribute('aria-selected','true');
+    const f = document.getElementById('simForm'); const s = presetsMap[p.dataset.preset];
     if (s){ Object.entries(s).forEach(([k,v]) => { if (f.elements[k]) f.elements[k].value = v; }); }
   }));
 
-  // Serialize form
-  function paramsFromForm(form) {
-    const fd = new FormData(form);
-    return new URLSearchParams([...fd.entries()]).toString();
-  }
+  // Helpers
+  const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
 
-  // Update metric cards
   function updateMetrics(metrics) {
-    const pay = metrics.payback_year ?? '—';
-    const npv = metrics.npv != null ? Math.round(metrics.npv).toLocaleString('he-IL') : '—';
-    const irr = metrics.irr != null ? (metrics.irr * 100).toFixed(1) + '%' : 'n/a';
-    const lcoe = metrics.lcoe != null ? '₪ ' + metrics.lcoe.toFixed(2) + '/kWh' : 'n/a';
+    const pay = metrics.payback_year;
+    const npv = metrics.npv;
+    const irr = metrics.irr;
+    const lcoe = metrics.lcoe;
 
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    set('statPayback', typeof pay === 'number' ? pay + 'y' : '—');
-    set('statNPV', '₪ ' + npv);
-    set('statIRR', irr);
-    set('statLCOE', lcoe);
+    setText('statPayback', (typeof pay === 'number') ? (pay + 'y') : '—');
+    setText('statNPV',     (typeof npv === 'number') ? ('₪ ' + Math.round(npv).toLocaleString('he-IL')) : '—');
+    setText('statIRR',     (typeof irr === 'number') ? ( (irr*100).toFixed(1) + '%' ) : 'n/a');
+    setText('statLCOE',    (typeof lcoe === 'number') ? ('₪ ' + lcoe.toFixed(2) + '/kWh') : 'n/a');
   }
 
-  // Plot cashflow
   function drawCashflow(years, cashflow) {
     const el = document.getElementById('cashflowChart');
+    const empty = document.getElementById('chartEmpty');
     if (!window.Plotly || !el) return;
-    const data = [{ x: years, y: cashflow, type: 'bar', hovertemplate: 'Year %{x}<br>₪%{y:,.0f}<extra></extra>' }];
-    const layout = {
+
+    if (!years?.length || !cashflow?.length) {
+      empty.hidden = false;
+      Plotly.purge(el);
+      return;
+    }
+    empty.hidden = true;
+    Plotly.react(el, [{
+      x: years, y: cashflow, type: 'bar',
+      hovertemplate: 'Year %{x}<br>₪%{y:,.0f}<extra></extra>'
+    }], {
       margin: { t: 24, r: 16, b: 40, l: 56 },
       paper_bgcolor: 'transparent',
       plot_bgcolor: 'transparent',
       yaxis: { tickprefix: '₪', gridcolor: '#2a2f3b' },
       xaxis: { gridcolor: '#2a2f3b' }
-    };
-    const config = { displayModeBar: false, responsive: true };
-    Plotly.react(el, data, layout, config);
+    }, { displayModeBar: false, responsive: true });
   }
+
+  function formQS(form) { return new URLSearchParams([...new FormData(form).entries()]).toString(); }
 
   // Submit → API
   document.getElementById('simForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const form = e.currentTarget;
     const btn = document.getElementById('btnRun');
-    btn.disabled = true; btn.textContent = 'Calculating...';
+    btn.disabled = true; btn.textContent = 'Calculating…';
 
     try {
-      const qs = paramsFromForm(form);
-      const res = await fetch(`/api/sim?${qs}`);
-      if (!res.ok) throw new Error('Request failed: ' + res.status);
+      const res = await fetch(`/api/sim?${formQS(e.currentTarget)}`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
       updateMetrics(data.metrics || {});
       drawCashflow(data.years || [], data.cashflow || []);
     } catch (err) {
       console.error(err);
-      updateMetrics({ payback_year: '—', npv: null, irr: null, lcoe: null });
+      updateMetrics({});
       drawCashflow([], []);
       alert('Calculation failed. Please try again.');
     } finally {
@@ -313,9 +320,8 @@
   // Reset
   document.getElementById('btnReset')?.addEventListener('click', () => {
     document.getElementById('simForm').reset();
-    ['statPayback','statNPV','statIRR','statLCOE'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = '—'; });
-    const ch = document.getElementById('cashflowChart');
-    if (ch && window.Plotly) Plotly.purge(ch);
+    updateMetrics({});
+    drawCashflow([], []);
   });
 </script>
 </body>
