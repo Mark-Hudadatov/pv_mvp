@@ -15,7 +15,7 @@ def apply_loan_flows(cash_in_series: list[float], principal: float,
     return out, pay
 
 def npv(cashflows: list[float], r: float) -> float:
-    return sum(cf / ((1 + r) ** t) for t, cf in enumerate(cashflows))
+    return cashflow[0] + sum(cf / ((1 + r) ** t) for t, cf in enumerate(cashflows[1:], start=1))
 
 def irr(cashflows: list[float], guess: float = 0.1, tol: float = 1e-6, max_iter: int = 100):
     r = guess
